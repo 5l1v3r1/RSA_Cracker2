@@ -17,11 +17,19 @@ struct RSA_KEY
 // Function prototypes
 RSA_KEY generate_RSA_key();
 void print_RSA_key(RSA_KEY in_key);
-void RSA_encode(char *input,
+void RSA_encode(
+	char *input,
 	size_t input_size,
 	unsigned long long *output,
 	size_t output_size,
 	unsigned long e,
+	unsigned long n);
+void RSA_decode(
+	unsigned long long *input,
+	size_t input_size,
+	char *output,
+	size_t output_size,
+	unsigned long d,
 	unsigned long n);
 int gcd(int a, int b);
 int modulo(int a, int b, int n);
@@ -46,10 +54,15 @@ int main()
 	printf("Ciphertext : ");
 	for (int i = 0; i < sizeof(secret_message); i++)
 	{
-		printf("%d ", ciphertext[i]);
+		if (i % 10 == 0) { printf("\n"); }
+		printf("%6d ", ciphertext[i]);
 	}
 
 	// Decrypt message using private key
+	printf("\n\nDecrypting using private key...\n");
+	char decrypt_message[50];
+	RSA_decode(ciphertext, sizeof ciphertext, decrypt_message, sizeof decrypt_message, my_key.d, my_key.n);
+	printf("Decrypted message: %s\n", decrypt_message);
 
 	// Attempt to bruteforce find the private key
 
@@ -57,7 +70,7 @@ int main()
 	
 	
 	
-	printf("End Program\n");
+	printf("\nEnd Program\n");
 }
 
 RSA_KEY generate_RSA_key()
@@ -128,7 +141,8 @@ int gcd(int a, int b)
 }
 
 // RSA Message encoder
-void RSA_encode(char *input,
+void RSA_encode(
+	char *input,
 	size_t input_size,
 	unsigned long long *output,
 	size_t output_size,
@@ -136,20 +150,34 @@ void RSA_encode(char *input,
 	unsigned long n)
 {
 	unsigned long long m,c,p;
-	printf("e: %d n: %d\n", e, n);
+	//printf("e: %d n: %d\n", e, n);
 
 	// Convert message string to integer
 	for (int i = 0; i < input_size; i++)
 	{
-		m = (int)input[i]; printf("m: %d ", m);
+		m = (int)input[i]; //printf("m: %d ", m);
 		//p = pow(m, e); printf("p: %d\n", p);
 		//c = p % n;
 		c = modulo(m, e, n);
-		printf("c: %d\n", c);
+		//printf("c: %d\n", c);
 		output[i] = c;
 	}
 }
 
+// RSA Message decoder
+void RSA_decode(
+	unsigned long long *input,
+	size_t input_size,
+	char *output,
+	size_t output_size,
+	unsigned long d,
+	unsigned long n)
+{
+	for (int i = 0; i < output_size; i++)
+	{
+		output[i] = modulo(input[i], d, n);
+	}
+}
 
 // Modulo Function for massive powers
 // Courtest of: https://stackoverflow.com/a/36398956
