@@ -52,34 +52,24 @@ __global__ void findPrime(unsigned long n, unsigned long roundedN)
 	unsigned long rangeLow = rangeTotal / (numBlocks * numThreads) * index;
 	unsigned long rangeHigh = rangeTotal / (numBlocks * numThreads) * (index + 1) - 1;
 
+	printf("Thread %d reporting in %d to %d\n", index, rangeLow, rangeHigh);
+
 	// Loop through range and search for primes
 	unsigned long output = 0;
 	for (unsigned long i = rangeLow; i <= rangeHigh; i++)
 	{
-		if (is_prime(i))
-		{
-			if (n % i == 0)
-			{
-				output = i;
-				printf("prime: %d\n", i);
-			}
-				
-			//if (is_prime(other))
-				
-
-			//if (index == 0)
-			//	printf("prime:%d\n", i);
-			//if (n % i == 0)
-			//	output = i;
-		}
-		
-		
-		//else if (i < 50)
-			//printf("   no:%d\n", i);
-
+		////if (is_prime(i))
+		////{
+		////	if (n % i == 0)
+		////	{
+		////		output = i;
+		////		printf("prime: %d\n", i);
+		////	}
+		////}
 	}
 
 	// Debug Print
+	printf("ind: %d\n", index);
 	printf("B:%d T:%d I:%d Range: %8d to %8d of %8d RESULT: %d\n", 
 		blockIdx.x, threadIdx.x, index, rangeLow, rangeHigh, rangeTotal, output);
 }
@@ -93,7 +83,7 @@ int main()
 	// Generate public & private key
 	printf("Generating key...\n");
 	RSA_KEY my_key;
-	unsigned long prime1 = 159;
+	unsigned long prime1 = 157;
 	unsigned long prime2 = 199;
 	my_key = generate_RSA_key(prime1, prime2);
 	print_RSA_key(my_key);
@@ -115,7 +105,7 @@ int main()
 	printf("\n\nDecrypting using private key...\n");
 	char decrypt_message[50];
 	RSA_decode(ciphertext, sizeof ciphertext, decrypt_message, sizeof decrypt_message, my_key.d, my_key.n);
-	printf("Decrypted message: %s\n", decrypt_message);
+	printf("Decrypted message: %s\n\n", decrypt_message);
 
 	// Attempt to bruteforce find the private key
 	findPrime <<< numBlocks, numThreads >>> (my_key.n, log2(my_key.n));
@@ -259,7 +249,10 @@ __device__ int is_prime(unsigned long input)
 	for (unsigned long k = 2; k < input; k++)
 	{
 		if (input % k == 0)
+		{
 			return 0;
+		}
+			
 	}
 	return 1;
 }
