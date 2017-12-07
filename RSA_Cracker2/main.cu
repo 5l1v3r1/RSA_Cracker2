@@ -15,7 +15,7 @@ struct RSA_KEY
 };
 
 // Function prototypes
-RSA_KEY generate_RSA_key();
+RSA_KEY generate_RSA_key(unsigned long p, unsigned long q);
 void print_RSA_key(RSA_KEY in_key);
 void RSA_encode(
 	char *input,
@@ -43,7 +43,9 @@ int main()
 	// Generate public & private key
 	printf("Generating key...\n");
 	RSA_KEY my_key;
-	my_key = generate_RSA_key();
+	unsigned long prime1 = 157;
+	unsigned long prime2 = 199;
+	my_key = generate_RSA_key(prime1, prime2);
 	print_RSA_key(my_key);
 
 	// Encode message using public key
@@ -51,6 +53,7 @@ int main()
 	unsigned long long ciphertext[50];
 	RSA_encode(secret_message, sizeof secret_message, ciphertext, sizeof ciphertext, my_key.e, my_key.n);
 	
+	// Print the ciphertext
 	printf("Ciphertext : ");
 	for (int i = 0; i < sizeof(secret_message); i++)
 	{
@@ -66,19 +69,21 @@ int main()
 
 	// Attempt to bruteforce find the private key
 
-	// Decrypt message using 
+	// Decrypt message using cracked key
 	
 	
 	
 	printf("\nEnd Program\n");
 }
 
-RSA_KEY generate_RSA_key()
+RSA_KEY generate_RSA_key(unsigned long p, unsigned long q)
 {
 	RSA_KEY ret_str;
 
-	ret_str.p = 11; // TODO: hardcoded for now - needs random generation
-	ret_str.q = 13; // TODO: hardcoded for now - needs random generation
+	//ret_str.p = 157; // TODO: hardcoded for now - needs random generation
+	//ret_str.q = 199; // TODO: hardcoded for now - needs random generation
+	ret_str.p = p;
+	ret_str.q = q;
 
 	// Calculate modulus
 	ret_str.n = ret_str.p * ret_str.q;
@@ -149,7 +154,7 @@ void RSA_encode(
 	unsigned long e,
 	unsigned long n)
 {
-	unsigned long long m,c,p;
+	unsigned long long m,c;
 	//printf("e: %d n: %d\n", e, n);
 
 	// Convert message string to integer
