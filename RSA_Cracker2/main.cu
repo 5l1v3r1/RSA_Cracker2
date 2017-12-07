@@ -5,6 +5,9 @@
 
 #include <stdio.h>
 
+#define numBlocks 2
+#define numThreads 4
+
 struct RSA_KEY
 {
 	unsigned long p; // selected prime 1
@@ -33,6 +36,53 @@ void RSA_decode(
 	unsigned long n);
 int gcd(int a, int b);
 int modulo(int a, int b, int n);
+__device__ int is_prime(unsigned long input);
+
+// RSA Cracking Kernel
+__global__ void findPrime(unsigned long n, unsigned long roundedN)
+{
+	// Round the input modulus to nearest power of 2
+	unsigned long rangeRounded = 2 << roundedN;
+	
+	// Sanity dictates that both primes should be < half the modulus
+	unsigned long rangeTotal = rangeRounded / 2;
+
+	// Determine min & max range for this thread
+	unsigned long index = blockIdx.x * numThreads + threadIdx.x;
+	unsigned long rangeLow = rangeTotal / (numBlocks * numThreads) * index;
+	unsigned long rangeHigh = rangeTotal / (numBlocks * numThreads) * (index + 1) - 1;
+
+	// Loop through range and search for primes
+	unsigned long output = 0;
+	for (unsigned long i = rangeLow; i <= rangeHigh; i++)
+	{
+		if (is_prime(i))
+		{
+			if (n % i == 0)
+			{
+				output = i;
+				printf("prime: %d\n", i);
+			}
+				
+			//if (is_prime(other))
+				
+
+			//if (index == 0)
+			//	printf("prime:%d\n", i);
+			//if (n % i == 0)
+			//	output = i;
+		}
+		
+		
+		//else if (i < 50)
+			//printf("   no:%d\n", i);
+
+	}
+
+	// Debug Print
+	printf("B:%d T:%d I:%d Range: %8d to %8d of %8d RESULT: %d\n", 
+		blockIdx.x, threadIdx.x, index, rangeLow, rangeHigh, rangeTotal, output);
+}
 
 int main()
 {
@@ -43,7 +93,7 @@ int main()
 	// Generate public & private key
 	printf("Generating key...\n");
 	RSA_KEY my_key;
-	unsigned long prime1 = 157;
+	unsigned long prime1 = 159;
 	unsigned long prime2 = 199;
 	my_key = generate_RSA_key(prime1, prime2);
 	print_RSA_key(my_key);
@@ -68,6 +118,8 @@ int main()
 	printf("Decrypted message: %s\n", decrypt_message);
 
 	// Attempt to bruteforce find the private key
+	findPrime <<< numBlocks, numThreads >>> (my_key.n, log2(my_key.n));
+	cudaDeviceSynchronize();
 
 	// Decrypt message using cracked key
 	
@@ -196,4 +248,18 @@ int modulo(int a, int b, int n) {
 		b /= 2;
 	}
 	return x%n;
+}
+
+// Test if a number is prime
+__device__ int is_prime(unsigned long input)
+{
+	//if (input == 1)
+		//return 0;
+
+	for (unsigned long k = 2; k < input; k++)
+	{
+		if (input % k == 0)
+			return 0;
+	}
+	return 1;
 }
