@@ -5,7 +5,7 @@
 
 #include <stdio.h>
 
-#define numBlocks 2
+#define numBlocks 1
 #define numThreads 4
 
 struct RSA_KEY
@@ -52,24 +52,30 @@ __global__ void findPrime(unsigned long n, unsigned long roundedN)
 	unsigned long rangeLow = rangeTotal / (numBlocks * numThreads) * index;
 	unsigned long rangeHigh = rangeTotal / (numBlocks * numThreads) * (index + 1) - 1;
 
-	printf("Thread %d reporting in %d to %d\n", index, rangeLow, rangeHigh);
+	printf("Thread %d reporting in N:%d | %d to %d\n", index, n, rangeLow, rangeHigh);
 
 	// Loop through range and search for primes
 	unsigned long output = 0;
-	for (unsigned long i = rangeLow; i <= rangeHigh; i++)
+	for (unsigned long myindex = rangeLow; myindex <= rangeHigh; myindex++)
 	{
-		////if (is_prime(i))
-		////{
-		////	if (n % i == 0)
-		////	{
-		////		output = i;
-		////		printf("prime: %d\n", i);
-		////	}
-		////}
+		if (is_prime(myindex))
+		{
+
+			//output += myindex;
+
+			if (n % myindex == 0)
+			{
+			////	output = i;
+			////	printf("prime: %d\n", i);
+			//	null;
+			}
+
+
+		}
 	}
 
 	// Debug Print
-	printf("ind: %d\n", index);
+	//printf("ind: %d\n", index);
 	printf("B:%d T:%d I:%d Range: %8d to %8d of %8d RESULT: %d\n", 
 		blockIdx.x, threadIdx.x, index, rangeLow, rangeHigh, rangeTotal, output);
 }
@@ -110,6 +116,14 @@ int main()
 	// Attempt to bruteforce find the private key
 	findPrime <<< numBlocks, numThreads >>> (my_key.n, log2(my_key.n));
 	cudaDeviceSynchronize();
+
+	// Error checking
+	cudaError_t err = cudaGetLastError();
+	if (err != cudaSuccess)
+		printf("Error: %s\n", cudaGetErrorString(err));
+
+	//printf("%f\n", 31243 % 10239);
+
 
 	// Decrypt message using cracked key
 	
