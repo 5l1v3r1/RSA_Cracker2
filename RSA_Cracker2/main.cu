@@ -5,8 +5,8 @@
 
 #include <stdio.h>
 
-#define numBlocks 1
-#define numThreads 4
+#define numBlocks 12
+#define numThreads 32
 
 struct RSA_KEY
 {
@@ -52,32 +52,26 @@ __global__ void findPrime(unsigned long n, unsigned long roundedN)
 	unsigned long rangeLow = rangeTotal / (numBlocks * numThreads) * index;
 	unsigned long rangeHigh = rangeTotal / (numBlocks * numThreads) * (index + 1) - 1;
 
-	printf("Thread %d reporting in N:%d | %d to %d\n", index, n, rangeLow, rangeHigh);
+	//printf("Thread %d reporting in N:%d | %d to %d\n", index, n, rangeLow, rangeHigh);
 
 	// Loop through range and search for primes
 	unsigned long output = 0;
-	for (unsigned long myindex = rangeLow; myindex <= rangeHigh; myindex++)
+	for (unsigned long myindex = rangeLow; myindex < rangeHigh; myindex++)
 	{
 		if (is_prime(myindex))
 		{
-
-			//output += myindex;
-
 			if (n % myindex == 0)
 			{
-			////	output = i;
-			////	printf("prime: %d\n", i);
-			//	null;
+				output = myindex;
+				printf("prime: %d\n", myindex);
 			}
-
-
 		}
 	}
 
 	// Debug Print
-	//printf("ind: %d\n", index);
-	printf("B:%d T:%d I:%d Range: %8d to %8d of %8d RESULT: %d\n", 
-		blockIdx.x, threadIdx.x, index, rangeLow, rangeHigh, rangeTotal, output);
+	if (output != 0)
+		printf("B:%d T:%d I:%d Range: %8d to %8d of %8d RESULT: %d\n", 
+			blockIdx.x, threadIdx.x, index, rangeLow, rangeHigh, rangeTotal, output);
 }
 
 int main()
